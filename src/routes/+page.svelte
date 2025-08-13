@@ -2,11 +2,10 @@
 	type res = {
 		width: number;
 		height: number;
-		x: number;
-		y: number;
 		keybind: string;
 		modifyers: boolean;
 		mods?: string[];
+		note?: string;
 	};
 
 	type box = {
@@ -30,38 +29,36 @@
 	let ninB_pos = $state('right');
 	let ninB_opacity = $state(0.7);
 	let ninB_toggle = $state('B');
+	let ninB_path = $state('ninb');
 
 	let resoloutions: res[] = $state([
-		{ width: 300, height: 1080, x: 810, y: 0, keybind: 'G', modifyers: false },
-		{ width: 1920, height: 300, x: 0, y: 390, keybind: 'F', modifyers: false },
+		{ width: 300, height: 850, keybind: 'G', modifyers: false, note: 'Thin' },
+		{ width: 1920, height: 300, keybind: 'F', modifyers: false, note: 'Wide' },
 		{
 			width: 250,
-			height: 16000,
-			x: 835,
-			y: -8000,
+			height: 16384,
 			keybind: 'P',
 			modifyers: true,
-			mods: ['ctrl']
+			mods: ['ctrl'],
+			note: 'Tall (measureing)'
 		}
 	]);
 
 	let mirrors: mirror[] = $derived([
 		{
 			src: { width: 120, height: 100, x: 0, y: 0 },
-			dst: { width: 240, height: 200, x: 100, y: 100 },
-			res: resoloutions[0]
+			dst: { width: 240, height: 200, x: 100, y: 100 }
 		},
 		{
 			src: { width: 1280, height: 720, x: 0, y: 0 },
-			dst: { width: 800, height: 600, x: 200, y: 150 },
-			res: resoloutions[1]
+			dst: { width: 800, height: 600, x: 200, y: 150 }
 		}
 	]);
 
 	function addResolution() {
 		resoloutions = [
 			...resoloutions,
-			{ width: 800, height: 600, x: 0, y: 0, keybind: '', modifyers: false, mods: [] }
+			{ width: 800, height: 600, keybind: '', modifyers: false, mods: [] }
 		];
 	}
 
@@ -93,10 +90,7 @@
 
 	let resolutionsLua = $derived(
 		resoloutions
-			.map(
-				(r, i) =>
-					`  res${i + 1} = { width = ${r.width}, height = ${r.height}, x = ${r.x}, y = ${r.y} },`
-			)
+			.map((r, i) => `  res${i + 1} = helpers.toggle_res{ ${r.width}, ${r.height} },`)
 			.join('\n')
 	);
 
@@ -148,12 +142,15 @@ local config = {
     ninb_opacity = ${ninB_opacity},
   },
 }
-
 ${mirrorsLua}
 
 local resolutions = {
 ${resolutionsLua}
 }
+
+local exec_ninb = function()
+    waywall.exec("${ninB_path}")
+end
 
 config.actions = {
 
@@ -257,6 +254,14 @@ return config
 				class="mt-1 w-full"
 			/>
 		</label>
+		<label class="flex flex-col">
+			Ninbot Path
+			<input
+				type="text"
+				bind:value={ninB_path}
+				class="mt-1 rounded border border-neutral-700 bg-neutral-800 p-2"
+			/>
+		</label>
 	</div>
 
 	<h2 class="mb-4 text-2xl font-semibold">Resolutions</h2>
@@ -285,22 +290,6 @@ return config
 						/>
 					</label>
 					<label class="flex flex-col text-sm">
-						X
-						<input
-							type="number"
-							bind:value={res.x}
-							class="w-20 rounded border border-neutral-700 bg-neutral-900 p-1"
-						/>
-					</label>
-					<label class="flex flex-col text-sm">
-						Y
-						<input
-							type="number"
-							bind:value={res.y}
-							class="w-20 rounded border border-neutral-700 bg-neutral-900 p-1"
-						/>
-					</label>
-					<label class="flex flex-col text-sm">
 						Keybind
 						<input
 							type="text"
@@ -309,6 +298,9 @@ return config
 						/>
 					</label>
 				</div>
+				{#if res.note}
+					<h2>{res.note}</h2>
+				{/if}
 				<div class="flex min-w-[150px] flex-col gap-1 text-sm">
 					<span
 						>Modifiers
