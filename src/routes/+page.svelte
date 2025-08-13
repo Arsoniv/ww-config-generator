@@ -90,7 +90,7 @@
 
 	let resolutionsLua = $derived(
 		resoloutions
-			.map((r, i) => `  res${i + 1} = helpers.toggle_res{ ${r.width}, ${r.height} },`)
+			.map((r, i) => `  res${i + 1} = helpers.toggle_res(${r.width}, ${r.height}),`)
 			.join('\n')
 	);
 
